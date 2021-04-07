@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Generate a CSR to be sent to NIST for getting the
 # certificate to access the NIST server

@@ -2,13 +2,13 @@
 # Copyright (C) 2018 - 2021, Stephan Mueller <smueller@chronox.de>
 #
 
-CC		:= gcc
+CC		?= gcc
 CFLAGS		+= -Wextra -Wall -pedantic -fPIC -O2 -std=gnu99
 #Hardening
 CFLAGS		+= -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fwrapv --param ssp-buffer-size=4 -fvisibility=hidden -fPIC -DACVPPROXY_EXTENSION
 
 UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Linux)
+ifneq ('', '$findstring($(UNAME_S), FreeBSD Linux)')
 LDFLAGS		+= -Wl,-z,relro,-z,now,--as-needed -fpic
 endif
 
@@ -64,7 +64,7 @@ LIBVERSION := $(LIBMAJOR).$(LIBMINOR).$(LIBPATCH)
 # Guess at the appropriate lib directory and word size
 #
 ###############################################################################
-ifeq ($(UNAME_S),Linux)
+ifeq ($(UNAME_S), Linux)
 
 ifeq ($(origin LIBDIR),undefined)
 LIBDIR		:= $(shell ldd /usr/bin/make | grep '\(/libc\.\)' | sed -e 's!.*\(/.*\)/libc[.].*!\1!')
@@ -101,17 +101,16 @@ endif
 #SONAME		:= lib$(NAME).$(LIBEXT).$(LIBMAJOR)
 #LIBNAME		:= lib$(NAME).$(LIBEXT).$(LIBVERSION)
 
-ifeq ($(UNAME_S),Linux)
-SONAME		?= lib$(NAME).so
-LIBNAME		?= lib$(NAME).so
-LDFLAGS		+= -Wl,-soname,$(SONAME)
-else ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S), Darwin)
 SONAME		?= lib$(NAME).dylib
 LIBNAME		?= lib$(NAME).dylib
 LDFLAGS		+= -dylib
 else
 SONAME		?= lib$(NAME).so
 LIBNAME		?= lib$(NAME).so
+ifneq ('', '$findstring($(UNAME_S), FreeBSD Linux)')
+LDFLAGS		+= -Wl,-soname,$(SONAME)
+endif
 endif
 
 ###############################################################################

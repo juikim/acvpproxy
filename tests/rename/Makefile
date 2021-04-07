@@ -7,9 +7,15 @@ CFLAGS		+= -Werror -Wextra -Wall -pedantic -fPIC -O2 -std=gnu99
 #Hardening
 CFLAGS		+= -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fwrapv --param ssp-buffer-size=4 -fvisibility=hidden -fPIE -Wno-missing-field-initializers -Wno-gnu-zero-variadic-macro-arguments
 
+ifneq ('', '$(findstring clang, $(CC))')
+CFLAGS		+= -Wno-c11-extensions
+CFLAGS		+= -Wno-implicit-const-int-float-conversion
+CFLAGS		+= -Wno-unknown-warning-option
+endif
+
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
-ifeq ($(UNAME_S),Linux)
+ifneq ('', '$findstring($(UNAME_S), FreeBSD Linux)')
 LDFLAGS		+= -Wl,-z,relro,-z,now -pie
 endif
 
@@ -44,13 +50,18 @@ INCLUDE_DIRS	+= $(SRCDIR)lib $(SRCDIR)apps $(SRCDIR)lib/module_implementations $
 LIBRARY_DIRS	+=
 LIBRARIES	+= pthread dl
 
-ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S), Darwin)
 LDFLAGS		+= -framework Foundation -framework Security
 EXCLUDED	+= $(SRCDIR)lib/common/network_backend_curl.c $(SRCDIR)lib/common/openssl_thread_support.c
 M_SRCS		:= $(wildcard $(SRCDIR)apps/*.m)
 M_SRCS		+= $(wildcard $(SRCDIR)lib/common/*.m)
 M_OBJS		:= ${M_SRCS:.m=.o}
 else
+ifeq ($(UNAME_S), FreeBSD)
+LDFLAGS		+= -fuse-ld=/usr/bin/ld.lld
+INCLUDE_DIRS	+= /usr/local/include
+LIBRARY_DIRS	+= /usr/local/lib
+endif
 LIBRARIES	+= curl
 M_OBJS		:=
 endif
@@ -73,6 +84,7 @@ C_SRCS += $(wildcard $(SRCDIR)lib/hash/*.c)
 C_SRCS += $(wildcard $(SRCDIR)lib/requests/*.c)
 C_SRCS += $(wildcard $(SRCDIR)lib/module_implementations/*.c)
 C_SRCS += $(wildcard $(SRCDIR)lib/json-c/*.c)
+EXCLUDED += $(SRCDIR)lib/json-c/libjson.c
 
 C_SRCS := $(filter-out $(wildcard $(EXCLUDED)), $(C_SRCS))
 
@@ -136,7 +148,7 @@ install:
 
 binarchive: $(NAME)
 	$(eval APPVERSION_NUMERIC := $(shell ./acvp-proxy --version-numeric 2>&1))
-ifeq ($(UNAME_S),Linux)
+ifeq ($(UNAME_S), Linux)
 	install -s -m 0755 $(NAME) -D -t $(BUILDDIR)/$(NAME)-$(APPVERSION_NUMERIC)/
 	install -m 0755 $(SRCDIR)helper/proxy-lib.sh -D -t $(BUILDDIR)/$(NAME)-$(APPVERSION_NUMERIC)/
 	install -m 0755 $(SRCDIR)helper/proxy.sh -D -t $(BUILDDIR)/$(NAME)-$(APPVERSION_NUMERIC)/

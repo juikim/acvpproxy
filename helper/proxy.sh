@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Helper script to invoke the ACVP Proxy.
 #
@@ -55,7 +55,7 @@ PROXYCODEPATH=${PROXYCODEPATH:-""}
 # Example:
 #	PROXYVERSION="1020000"
 #
-PROXYVERSION=${PROXYVERSION:-"1060000"}
+PROXYVERSION=${PROXYVERSION:-"1070000"}
 
 #
 # Specify the ACVP search parameters if needed. As documented with the ACVP
@@ -109,13 +109,13 @@ PARAMS=""
 
 if [ -z "$PROXYCODEPATH" -a -f "$PROXYBINPATH/acvp-proxy-${PROXYVERSION}/proxy-lib.sh" ]
 then
-	source "$PROXYBINPATH/acvp-proxy-${PROXYVERSION}/proxy-lib.sh"
+	. "$PROXYBINPATH/acvp-proxy-${PROXYVERSION}/proxy-lib.sh"
 elif [ -n "$PROXYCODEPATH" -a -d "$PROXYCODEPATH" ]
 then
-	source $PROXYCODEPATH/helper/proxy-lib.sh
+	. $PROXYCODEPATH/helper/proxy-lib.sh
 elif [ -z "$PROXYCODEPATH" -a -f "$PROXYBINPATH/proxy-lib.sh" ]
 then
-	source $PROXYBINPATH/proxy-lib.sh
+	. $PROXYBINPATH/proxy-lib.sh
 else
 	echo "File proxy-lib.sh not found."
 	echo "Either configure PROXYCODEPATH to point to the ACVP Proxy source repository or provide the proxy-lib.sh in the directory $PROXYBINPATH."

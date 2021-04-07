@@ -2,7 +2,7 @@
 # Copyright (C) 2018 - 2021, Stephan Mueller <smueller@chronox.de>
 #
 
-CC		:= gcc
+CC		?= gcc
 CFLAGS		+= -Werror -Wextra -Wall -pedantic -fPIC -O2 -std=gnu99
 #Hardening
 CFLAGS		+= -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fwrapv --param ssp-buffer-size=4 -fvisibility=hidden -fPIC

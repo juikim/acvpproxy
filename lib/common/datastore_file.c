@@ -184,7 +184,11 @@ static int acvp_datastore_check_version(char *basedir, const bool createdir)
 	if (readversion != ACVP_DS_VERSION) {
 		logger(LOGGER_ERR, LOGGER_C_DS_FILE,
 		       "Datastore at %s is old!\n", basedir);
+#ifdef ETIME
 		return -ETIME;
+#else
+		return -ETIMEDOUT;	/* XXX */
+#endif
 	}
 
 	logger(LOGGER_DEBUG, LOGGER_C_DS_FILE,

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Wrapper script to invoke ACVP Proxy with limited numbers of arguments
 #
@@ -24,7 +24,7 @@ LOGFILE="acvp-proxy"
 # ACVP Proxy test vector files
 REQFILE="testvector-request.json"
 # proxy-lib.sh status file
-SCRIPT=${0//[.\/]/_}
+SCRIPT=$(echo $0 | tr ./ _)
 PROXYLIBSTATUS=".proxy-lib-status-$SCRIPT.txt"
 PROXYLIBSTATUSPOST=".proxy-lib-status-post-$SCRIPT.txt"
 
@@ -56,7 +56,7 @@ DOLOG=0
 PRODUCTION_CONF="acvpproxy_conf_production.json"
 DEMO_CONF="acvpproxy_conf.json"
 
-if [ `uname -s` == "Darwin" ]
+if [ `uname -s` = "Darwin" ]
 then
        LIBEXT="dylib"
 else
@@ -106,8 +106,8 @@ usage() {
 color()
 {
 	bg=0
-	echo -ne "\033[0m"
-	while [[ $# -gt 0 ]]; do
+	printf "\033[0m"
+	while [ $# -gt 0 ]; do
 		code=0
 		case $1 in
 			black) code=30 ;;
@@ -123,7 +123,7 @@ color()
 			reset|off|default) code=0 ;;
 			bold|bright) code=1 ;;
 		esac
-		[[ $code == 0 ]] || echo -ne "\033[$(printf "%02d" $((code+bg)))m"
+		[ $code -eq 0 ] || printf "\033[%02dm" $((code+bg))
 		shift
 	done
 }

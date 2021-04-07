@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 . ../libtest.sh
 
 EXEC="../../acvp-proxy"
 NAME="$(basename $EXEC)"
+MAKE="${MAKE:-make}"
 
 TESTVECTORS_ORIG="testvectors.orig"
 SECUREDATASTORE_ORIG="secure-datastore.orig"
@@ -209,15 +210,15 @@ test_rename_oename()
 
 init()
 {
-	trap "cleanup; make -s -C ../../ clean; exit"  0 1 2 3 15
+	trap "cleanup; ${MAKE} -s -C ../../ clean; exit"  0 1 2 3 15
 
 	if [ ! -d ${LOGDIR} ]
 	then
 		mkdir ${LOGDIR}
 	fi
 
-	make -s -C ../../ clean
-	make -s -C ../../
+	"${MAKE}" -s -C ../../ clean
+	"${MAKE}" -s -C ../../
 }
 
 init

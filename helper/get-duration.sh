@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Print out a TAB-delimited table with the download and upload duration
 # for all ciphers

@@ -38,8 +38,10 @@
 
 #if ((OPENSSL_VERSION_NUMBER < 0x10100000L) || defined LIBRESSL_VERSION_NUMBER)
 
+#ifndef __FreeBSD__
 #pragma message                                                                \
 	"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nEnabling threading callbacks for OpenSSL / LibreSSL. Read README.openssl.md as your milage with this old version of OpenSSL / LibreSSL may vary.\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+#endif
 
 #define MUTEX_TYPE pthread_mutex_t
 #define MUTEX_SETUP(x) pthread_mutex_init(&(x), NULL)

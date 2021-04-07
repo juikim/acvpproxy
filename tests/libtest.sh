@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Copyright (C) 2017 - 2021, Stephan Mueller <smueller@chronox.de>
 #
@@ -25,15 +25,16 @@
 #####################################################################
 
 failures=0
-GCOV=$(type -p gcov)
+GCOV=${GCOV:-$(type -p gcov)}
 GCOV_LOGDIR="gcov"
+MAKE="${MAKE:-make}"
 
 # color -- emit ansi color codes
 color()
 {
 	bg=0
-	echo -ne "\033[0m"
-	while [[ $# -gt 0 ]]; do
+	printf "\033[0m"
+	while [ $# -gt 0 ]; do
 		code=0
 		case $1 in
 			black) code=30 ;;
@@ -49,7 +50,7 @@ color()
 			reset|off|default) code=0 ;;
 			bold|bright) code=1 ;;
 		esac
-		[[ $code == 0 ]] || echo -ne "\033[$(printf "%02d" $((code+bg)))m"
+		[ $code -eq 0 ] || printf "\033[%02dm" $((code+bg))
 		shift
 	done
 }
@@ -94,15 +95,15 @@ exit_test()
 
 init_common()
 {
-	trap "make -s clean; exit" 0 1 2 3 15
+	trap "${MAKE} -s clean; exit" 0 1 2 3 15
 
-	make clean
+	"${MAKE}" clean
 
 	if [ -x "${GCOV}" ]
 	then
-		make -s gcov
+		"${MAKE}" -s gcov
 	else
-		make -s
+		"${MAKE}" -s
 	fi
 }
 

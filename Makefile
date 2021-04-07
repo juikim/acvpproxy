@@ -11,13 +11,17 @@ CFLAGS		+= -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fwrap
 CFLAGS		+= -flto
 LDFLAGS		+= -flto
 
-ifneq '' '$(findstring clang,$(CC))'
+ifneq ('', '$(findstring clang, $(CC))')
+CFLAGS		+= -Wno-c11-extensions
 CFLAGS		+= -Wno-gnu-zero-variadic-macro-arguments
+CFLAGS		+= -Wno-implicit-const-int-float-conversion
+CFLAGS		+= -Wno-implicit-int-float-conversion
+CFLAGS		+= -Wno-unknown-warning-option
 endif
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
-ifeq ($(UNAME_S),Linux)
+ifneq ('', '$findstring($(UNAME_S), FreeBSD Linux)')
 LDFLAGS		+= -Wl,-z,relro,-z,now -pie
 LDFLAGS_SO	+= -Wl,-z,relro,-z,now,--as-needed -fpic
 endif
@@ -67,7 +71,7 @@ INCLUDE_DIRS	+= $(SRCDIR)lib $(SRCDIR)apps $(SRCDIR)lib/module_implementations $
 LIBRARY_DIRS	+=
 LIBRARIES	+= pthread dl
 
-ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S), Darwin)
 CFLAGS		+= -mmacosx-version-min=10.14 -Wno-gnu-zero-variadic-macro-arguments
 LDFLAGS		+= -framework Foundation -framework Security
 EXCLUDED	+= $(SRCDIR)lib/common/network_backend_curl.c $(SRCDIR)lib/common/openssl_thread_support.c
@@ -75,6 +79,14 @@ M_SRCS		:= $(wildcard $(SRCDIR)apps/*.m)
 M_SRCS		+= $(wildcard $(SRCDIR)lib/common/*.m)
 M_OBJS		:= ${M_SRCS:.m=.o}
 else
+ifeq ($(UNAME_S), FreeBSD)
+CFLAGS		+= -D_WITH_DPRINTF
+LDFLAGS		+= -fuse-ld=/usr/bin/ld.lld
+LDFLAGS_SO	+= -fuse-ld=/usr/bin/ld.lld
+INCLUDE_DIRS	+= /usr/local/include
+LIBRARY_DIRS	+= /usr/local/lib
+LIBRARIES	+= crypto
+endif
 LIBRARIES	+= curl
 M_OBJS		:=
 endif
@@ -88,10 +100,7 @@ LDFLAGS		+= $(foreach library,$(LIBRARIES),-l$(library))
 # Shared library compilation
 #
 ###############################################################################
-ifeq ($(UNAME_S),Linux)
-SONAMEEXT	:= $(APPVERSION).so
-LDFLAGS_SONAME	:= -soname
-else ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S), Darwin)
 SONAMEEXT	:= $(APPVERSION).dylib
 LDFLAGS_SO	+= -dylib
 LDFLAGS_SONAME	:= -install_name
@@ -113,6 +122,7 @@ C_SRCS += $(wildcard $(SRCDIR)lib/esvp/*.c)
 C_SRCS += $(wildcard $(SRCDIR)lib/hash/*.c)
 C_SRCS += $(wildcard $(SRCDIR)lib/requests/*.c)
 C_SRCS += $(wildcard $(SRCDIR)lib/json-c/*.c)
+EXCLUDED += $(SRCDIR)lib/json-c/libjson.c
 
 EX_SRCS += $(wildcard $(SRCDIR)lib/module_implementations/*.c)
 
@@ -210,7 +220,7 @@ binarchive: extensions
 	$(eval APPVERSION_NUMERIC := $(shell ./acvp-proxy --version-numeric 2>&1))
 	strip $(APPNAME)
 
-ifeq ($(UNAME_S),Linux)
+ifeq ($(UNAME_S), Linux)
 	install -s -m 0755 $(APPNAME) -D -t $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/
 	install -s -m 0755 $(ESVPNAME) -D -t $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/
 	install -m 0755 $(SRCDIR)helper/proxy-lib.sh -D -t $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/
@@ -238,7 +248,11 @@ else
 	@- cp -f $(SRCDIR)lib/bool.h $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/lib/
 	@- cp -f $(SRCDIR)lib/cipher_definitions.h $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/lib/
 	@- cp -f $(SRCDIR)lib/module_implementations/*.h $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/lib/module_implementations/
+ifeq ($(UNAME_S), Darwin)
 	@- cp -f $(SRCDIR)lib/module_implementations/*.dylib $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/extensions/
+else
+	@- cp -f $(SRCDIR)lib/module_implementations/*.so $(BUILDDIR)/$(APPNAME)-$(APPVERSION_NUMERIC)/extensions/
+endif
 endif
 	@- tar -cJf $(APPNAME)-$(APPVERSION_NUMERIC).$(UNAME_S).$(UNAME_M).tar.xz -C $(BUILDDIR) $(APPNAME)-$(APPVERSION_NUMERIC)
 

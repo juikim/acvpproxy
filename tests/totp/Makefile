@@ -2,14 +2,14 @@
 # Copyright (C) 2018 - 2021, Stephan Mueller <smueller@chronox.de>
 #
 
-CC		:= gcc
+CC		?= gcc
 CFLAGS		+= -Wextra -Wall -pedantic -fPIC -O2 -std=gnu99
 #Hardening
 CFLAGS		+= -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fwrapv --param ssp-buffer-size=4 -fvisibility=hidden -fPIE
 
 UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Linux)
-LDFLAGS        += -Wl,-z,relro,-z,now -pie
+ifneq ('', '$findstring($(UNAME_S), FreeBSD Linux)')
+LDFLAGS		+= -Wl,-z,relro,-z,now -pie
 endif
 
 NAME		:= totp
@@ -43,6 +43,11 @@ LIBRARIES	:= pthread
 CFLAGS		+= $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 LDFLAGS		+= $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir))
 LDFLAGS		+= $(foreach library,$(LIBRARIES),-l$(library))
+
+ifeq ($(UNAME_S), FreeBSD)
+CFLAGS		+= -D_WITH_DPRINTF
+INCLUDE_DIRS	+= /usr/local/include
+endif
 
 ###############################################################################
 #

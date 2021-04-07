@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 . ../libtest.sh
 
 EXEC="./totp_mq_server"
 NAME="$(basename $EXEC)"
+MAKE="${MAKE:-make}"
 OUTDIR="/tmp/totp_mq_server_test"
 
 # Test 1
@@ -135,13 +136,13 @@ test5()
 # Expected result: All callers obtain all requested TOTP values
 test6()
 {
-	make clean
+	"${MAKE}" clean
 
 	if [ -x "${GCOV}" ]
 	then
-		CFLAGS="$CFLAGS -DTOTP_STEP_SIZE=3" make -s gcov
+		CFLAGS="$CFLAGS -DTOTP_STEP_SIZE=3" "${MAKE}" -s gcov
 	else
-		CFLAGS="$CFLAGS -DTOTP_STEP_SIZE=3" make -s
+		CFLAGS="$CFLAGS -DTOTP_STEP_SIZE=3" "${MAKE}" -s
 	fi
 
 	($EXEC > $OUTDIR/t6_p1) &
@@ -217,7 +218,7 @@ test6()
 
 init()
 {
-	trap "rm -rf $OUTDIR; make -s clean; exit" 0 1 2 3 15
+	trap "rm -rf $OUTDIR; ${MAKE} -s clean; exit" 0 1 2 3 15
 	mkdir $OUTDIR 2>/dev/null
 	if [ $? -ne 0 ]
 	then
@@ -225,12 +226,12 @@ init()
 		exit 1
 	fi
 
-	make clean
+	"${MAKE}" clean
 	if [ -x "${GCOV}" ]
 	then
-		CFLAGS="-DTOTP_STEP_SIZE=10" make -s gcov
+		CFLAGS="-DTOTP_STEP_SIZE=10" "${MAKE}" -s gcov
 	else
-		CFLAGS="-DTOTP_STEP_SIZE=10" make -s
+		CFLAGS="-DTOTP_STEP_SIZE=10" "${MAKE}" -s
 	fi
 
 	echo_info "Testing $NAME commences - may take several minutes per test"

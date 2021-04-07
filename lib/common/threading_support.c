@@ -22,6 +22,9 @@
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -423,8 +426,11 @@ int thread_set_name(enum acvp_request_type type, uint32_t id)
 		break;
 	}
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 	return -pthread_setname_np(name);
+#elif defined(__FreeBSD__)
+	pthread_set_name_np(pthread_self(), name);
+	return 0;
 #else
 	return -pthread_setname_np(pthread_self(), name);
 #endif
@@ -432,7 +438,12 @@ int thread_set_name(enum acvp_request_type type, uint32_t id)
 
 int thread_get_name(char *name, size_t len)
 {
+#if defined(__FreeBSD__)
+	pthread_get_name_np(pthread_self(), name, len);
+	return 0;
+#else
 	return -pthread_getname_np(pthread_self(), name, len);
+#endif
 }
 
 /* Wait for all threads */
